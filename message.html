@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discussion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        header {
+            padding: 20px;
+            background: #007bff;
+            color: white;
+            text-align: center;
+        }
+        #message-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background: white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .message.me {
+            background: #007bff;
+            color: white;
+            text-align: right;
+        }
+        footer {
+            display: flex;
+            padding: 10px;
+            background: white;
+            box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.1);
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Messages</h1>
+    </header>
+    <div id="message-container">
+        <!-- Les messages s'affichent ici -->
+    </div>
+    <footer>
+        <input type="text" id="message-input" placeholder="Écrivez un message...">
+        <button id="send-btn">Envoyer</button>
+    </footer>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+        const supabaseUrl = "https://uultqlrjeoeqduzrgcfw.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1bHRxbHJqZW9lcWR1enJnY2Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyNzg2ODcsImV4cCI6MjA1Mjg1NDY4N30.hmin3MdMKo-fEmEx9rh1sQ4CFUfrUmZzMxxTfKr3neY";
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const messageContainer = document.getElementById('message-container');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        // Identifiant de la discussion (à récupérer dynamiquement dans une vraie app)
+        const chatId = "1"; // Remplacez par une logique pour récupérer l'ID de discussion
+
+        // Vérifier la session utilisateur
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = "connexion.html";
+            }
+        }
+
+        // Charger les messages d'une discussion
+        async function loadMessages() {
+            const { data, error } = await supabase
+                .from('messages')
+                .select('id, content, sender_id')
+                .eq('chat_id', chatId)
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                console.error(error);
+            } else {
+                messageContainer.innerHTML = data.map(msg => `
+                    <div class="message ${msg.sender_id === supabase.auth.user()?.id ? 'me' : ''}">
+                        ${msg.content}
+                    </div>
+                `).join('');
+                messageContainer.scrollTop = messageContainer.scrollHeight; // Scroll en bas
+            }
+        }
+
+        // Envoyer un nouveau message
+        async function sendMessage() {
+            const content = messageInput.value.trim();
+            if (content === '') return;
+
+            const { error } = await supabase
+                .from('messages')
+                .insert([{ content, chat_id: chatId, sender_id: supabase.auth.user()?.id }]);
+
+            if (error) {
+                console.error(error);
+            } else {
+                messageInput.value = ''; // Réinitialiser le champ
+                loadMessages(); // Recharger les messages
+            }
+        }
+
+        // Charger les messages au démarrage
+        checkSession();
+        loadMessages();
+
+        // Bouton d'envoi
+        sendBtn.addEventListener('click', sendMessage);
+
+        // Envoyer avec "Entrée"
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
