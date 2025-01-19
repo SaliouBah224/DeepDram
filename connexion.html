@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion / Inscription</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        #auth-container {
+            width: 300px;
+            padding: 20px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="auth-container">
+        <h2>Se connecter</h2>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Mot de passe" required>
+        <button id="login-btn">Connexion</button>
+        <button id="signup-btn">Créer un compte</button>
+        <p class="error" id="error-message"></p>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        
+        const supabaseUrl = "https://uultqlrjeoeqduzrgcfw.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1bHRxbHJqZW9lcWR1enJnY2Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyNzg2ODcsImV4cCI6MjA1Mjg1NDY4N30.hmin3MdMKo-fEmEx9rh1sQ4CFUfrUmZzMxxTfKr3neY";
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const loginBtn = document.getElementById('login-btn');
+        const signupBtn = document.getElementById('signup-btn');
+        const errorMessage = document.getElementById('error-message');
+
+        // Connexion
+        loginBtn.addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                errorMessage.textContent = error.message;
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        // Création de compte
+        signupBtn.addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const { error } = await supabase.auth.signUp({ email, password });
+            if (error) {
+                errorMessage.textContent = error.message;
+            } else {
+                alert("Compte créé avec succès !");
+                window.location.href = "index.html";
+            }
+        });
+    </script>
+</body>
+      </html>
