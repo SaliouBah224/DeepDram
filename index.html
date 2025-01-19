@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Discussions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        header {
+            padding: 20px;
+            background: #007bff;
+            color: white;
+            text-align: center;
+        }
+        #chat-list {
+            padding: 20px;
+        }
+        .chat {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+        .chat:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Discussions</h1>
+    </header>
+    <div id="chat-list">
+        <!-- Les discussions s'affichent ici -->
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        
+        const supabaseUrl = "https://uultqlrjeoeqduzrgcfw.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1bHRxbHJqZW9lcWR1enJnY2Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyNzg2ODcsImV4cCI6MjA1Mjg1NDY4N30.hmin3MdMKo-fEmEx9rh1sQ4CFUfrUmZzMxxTfKr3neY";
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const chatList = document.getElementById('chat-list');
+
+        // Vérifier la session
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = "connexion.html";
+            }
+        }
+
+        // Récupérer les discussions
+        async function fetchChats() {
+            const { data, error } = await supabase.from('messages').select('content').limit(10);
+            if (error) {
+                console.error(error);
+            } else {
+                chatList.innerHTML = data.map(chat => `<div class="chat">${chat.content}</div>`).join('');
+            }
+        }
+
+        // Initialiser
+        checkSession();
+        fetchChats();
+    </script>
+</body>
+</html>
